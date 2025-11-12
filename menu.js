@@ -1,27 +1,33 @@
 /*!
- * Blogger Dropdown Menu v1.1 - Stable Refresh
- * Menambahkan submenu otomatis berdasarkan prefix "--"
- * Tetap aktif setelah save theme / refresh
+ * Blogger Dropdown Menu v1.3 - Anti Reset Edition
+ * Script ini akan otomatis memeriksa ulang menu setiap kali halaman Blogger selesai memuat
+ * dan akan tetap aktif walaupun kamu menyimpan template atau mengedit HTML.
  */
 
 (function () {
   function buildDropdown() {
-    var menu = document.getElementById('mainMenuList');
+    const menu = document.getElementById('mainMenuList');
     if (!menu) return;
 
-    var items = Array.from(menu.querySelectorAll('li'));
-    var lastParent = null;
+    // Cegah duplikasi (hapus submenu lama jika ada)
+    const existingDropdowns = menu.querySelectorAll('.dropdown');
+    existingDropdowns.forEach(d => d.remove());
+    const existingClasses = menu.querySelectorAll('.has-dropdown');
+    existingClasses.forEach(c => c.classList.remove('has-dropdown'));
 
-    items.forEach(function (li) {
-      var link = li.querySelector('a');
+    const items = Array.from(menu.querySelectorAll('li'));
+    let lastParent = null;
+
+    items.forEach(li => {
+      const link = li.querySelector('a');
       if (!link) return;
-      var name = link.textContent.trim();
+      const name = link.textContent.trim();
 
-      // deteksi sub menu dari prefix "--"
       if (name.startsWith('--')) {
         link.textContent = name.replace(/^--+/, '').trim();
+
         if (lastParent) {
-          var sub = lastParent.querySelector('ul');
+          let sub = lastParent.querySelector('ul');
           if (!sub) {
             sub = document.createElement('ul');
             sub.classList.add('dropdown');
@@ -36,10 +42,11 @@
     });
   }
 
-  // Jalankan saat halaman dimuat
+  // Jalankan pertama kali saat halaman dimuat
   document.addEventListener('DOMContentLoaded', buildDropdown);
 
-  // Jalankan ulang jika Blogger memuat ulang elemen layout
-  document.addEventListener('load', buildDropdown, true);
-  setTimeout(buildDropdown, 2000);
+  // Jalankan ulang setiap kali Blogger reload atau dynamic content berubah
+  window.addEventListener('load', buildDropdown);
+  document.addEventListener('readystatechange', buildDropdown);
+  setInterval(buildDropdown, 3000); // ← jalankan ulang tiap 3 detik untuk jaga stabil
 })();
